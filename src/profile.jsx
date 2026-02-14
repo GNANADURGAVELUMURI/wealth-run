@@ -6,9 +6,8 @@ import API_BASE_URL from "./api";
 function Profile() {
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const userName = localStorage.getItem("userName") || "N/A";
-  const userEmail = localStorage.getItem("userEmail") || "N/A";
-
+  const userName = user?.name || "N/A";
+const userEmail = user?.email || "N/A";
   const [risk, setRisk] = useState({
     level: "Low",
     percent: 20,
