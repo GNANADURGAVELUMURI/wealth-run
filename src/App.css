@@ -1,0 +1,48 @@
+/* App container: sidebar + main content */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Sidebar styling */
+.sidebar {
+  width: 220px;
+  background-color: #1e1e2f;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-title {
+  margin-bottom: 30px;
+  font-size: 24px;
+  text-align: center;
+  color: #ff7f50;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  display: block;
+  transition: background 0.2s;
+}
+
+.nav-link:hover {
+  background-color: #343454;
+}
+
+.nav-link.active {
+  background-color: #ff7f50;
+}
+
+/* Main content styling */
+.main-content {
+  flex: 1;
+  background-color: #f4f5f9;
+  padding: 30px;
+}
