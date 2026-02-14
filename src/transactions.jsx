@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import SidebarLayout from "./sidebar";
 import { UserContext } from "./app";
-import API_BASE_URL from "../api";   // ✅ ADDED
+import API_BASE_URL from "./api";
+   // ✅ ADDED
 
 function Transactions({ refreshInvestments, refreshGoals }) {
   const { user } = useContext(UserContext);

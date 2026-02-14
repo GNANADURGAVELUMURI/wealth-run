@@ -1,6 +1,8 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "./app";
+import API_BASE_URL from "./api";
+
 
 function Login() {
   const navigate = useNavigate();
@@ -10,6 +12,11 @@ function Login() {
     email: "",
     password: "",
   });
+
+  const handleChange = (e) => {
+  setFormData({ ...formData, [e.target.name]: e.target.value });
+};
+
 
   const handleLogin = async (e) => {
   e.preventDefault();

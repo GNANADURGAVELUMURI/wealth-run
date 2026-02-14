@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import SidebarLayout from "./sidebar";
-import API_BASE_URL from "../api";   // ✅ ADDED
+import API_BASE_URL from "./api";
+   // ✅ ADDED
 
 function Profile() {
   const user = JSON.parse(localStorage.getItem("user"));

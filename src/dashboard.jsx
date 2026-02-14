@@ -10,7 +10,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import API_BASE_URL from "../api";   // ✅ ADDED
+import API_BASE_URL from "./api";
+// ✅ ADDED
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 

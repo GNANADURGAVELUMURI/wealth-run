@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import SidebarLayout from "./sidebar";
 import { UserContext } from "./app";
-import API_BASE_URL from "../api";   // ✅ ADDED
+import API_BASE_URL from "./api";
+ // ✅ ADDED
 
 function Goals() {
   const { user: contextUser } = useContext(UserContext);
@@ -154,5 +155,54 @@ function Goals() {
     </SidebarLayout>
   );
 }
+/* -------- STYLES -------- */
+const styles = {
+  container: {
+    padding: "30px",
+    background: "#f4f6f9",
+    minHeight: "100vh",
+  },
+  card: {
+    background: "#fff",
+    padding: "16px",
+    borderRadius: "10px",
+    marginBottom: "15px",
+    boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
+  },
+  addForm: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "10px",
+    marginBottom: "20px",
+    background: "#fff",
+    padding: "16px",
+    borderRadius: "10px",
+    boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
+  },
+  input: {
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #D1D5DB",
+    flex: "1",
+  },
+  addBtn: {
+    background: "#2563EB",
+    color: "#fff",
+    padding: "10px",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    marginRight: "8px",
+  },
+  deleteBtn: {
+    background: "#EF4444",
+    color: "#fff",
+    padding: "8px",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+  },
+};
+
 
 export default Goals;

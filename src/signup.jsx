@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "./app";
-import API_BASE_URL from "../api";   // ✅ Uses deployed backend
+import API_BASE_URL from "./api";
+  // ✅ Uses deployed backend
 
 function Signup() {
   const navigate = useNavigate();

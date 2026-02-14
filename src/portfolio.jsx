@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import SidebarLayout from "./sidebar";
-import API_BASE_URL from "../api";   // ✅ Use deployed backend URL
+import API_BASE_URL from "./api";
+  // ✅ Use deployed backend URL
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { UserContext } from "./app";
