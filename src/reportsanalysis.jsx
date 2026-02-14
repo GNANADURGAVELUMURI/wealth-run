@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import SidebarLayout from "./sidebar";
 import API_BASE_URL from "./api";
-   // ✅ ADDED
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -30,12 +29,12 @@ function ReportsAnalysis() {
   useEffect(() => {
     if (!user) return;
 
-    fetch(`${API_BASE_URL}/investments/${user.id}`)   // ✅ CHANGED
+    fetch(`${API_BASE_URL}/investments/${user.id}`)
       .then((res) => res.json())
       .then(setInvestments)
       .catch(console.error);
 
-    fetch(`${API_BASE_URL}/goals/${user.id}`)         // ✅ CHANGED
+    fetch(`${API_BASE_URL}/goals/${user.id}`)
       .then((res) => res.json())
       .then(setGoals)
       .catch(() => setGoals([]));
@@ -170,34 +169,92 @@ function ReportsAnalysis() {
   return (
     <SidebarLayout>
       <div style={{ padding: "30px", background: "#F3F4F6", minHeight: "100vh" }}>
-        <h2 style={{ color: "#1E3A8A", marginBottom: "20px" }}>Reports</h2>
+        <h2 style={{ color: "#1E3A8A", marginBottom: "25px" }}>Reports</h2>
 
-        <div style={{ display: "flex", gap: "20px", marginBottom: "25px" }}>
-          <div style={{ background: "#2563EB", color: "#fff", padding: "16px", borderRadius: "12px" }}>
-            ₹{totalCost.toFixed(0)}<div>Total Invested</div>
+        {/* ===== CENTERED CARDS ===== */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "30px",
+            marginBottom: "35px",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={reportCardStyle("#2563EB")}>
+            <div style={cardValue}>₹{totalCost.toFixed(0)}</div>
+            <div style={cardLabel}>Total Invested</div>
           </div>
 
-          <div style={{ background: "#10B981", color: "#fff", padding: "16px", borderRadius: "12px" }}>
-            ₹{totalReturn.toFixed(0)}<div>Return Earned</div>
+          <div style={reportCardStyle("#10B981")}>
+            <div style={cardValue}>₹{totalReturn.toFixed(0)}</div>
+            <div style={cardLabel}>Return Earned</div>
           </div>
 
-          <div style={{ background: "#2563EB", color: "#fff", padding: "16px", borderRadius: "12px" }}>
-            {bestAsset}<div>Best Asset</div>
+          <div style={reportCardStyle("#2563EB")}>
+            <div style={cardValue}>{bestAsset}</div>
+            <div style={cardLabel}>Best Asset</div>
           </div>
         </div>
 
+        {/* ===== GRAPH ===== */}
         <div style={{ background: "#fff", padding: "20px", borderRadius: "14px", height: "420px" }}>
           <Bar data={chartData} options={options} />
         </div>
 
+        {/* ===== BUTTON ===== */}
         <div style={{ textAlign: "center", marginTop: "30px" }}>
-          <button onClick={downloadPDF}>
-            Download PDF Report
+          <button
+            onClick={downloadPDF}
+            style={downloadBtnStyle}
+            onMouseOver={(e) => (e.target.style.backgroundColor = "#1E40AF")}
+            onMouseOut={(e) => (e.target.style.backgroundColor = "#2563EB")}
+          >
+            📄 Download PDF Report
           </button>
         </div>
       </div>
     </SidebarLayout>
   );
 }
+
+/* ===== CARD STYLE ===== */
+const reportCardStyle = (bg) => ({
+  background: bg,
+  color: "#fff",
+  width: "260px",
+  height: "110px",
+  borderRadius: "14px",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+});
+
+/* ===== CARD TEXT ===== */
+const cardValue = {
+  fontSize: "26px",
+  fontWeight: "700",
+};
+
+const cardLabel = {
+  fontSize: "14px",
+  opacity: 0.9,
+};
+
+/* ===== BUTTON STYLE ===== */
+const downloadBtnStyle = {
+  padding: "12px 26px",
+  backgroundColor: "#2563EB",
+  color: "#FFFFFF",
+  border: "none",
+  borderRadius: "8px",
+  fontSize: "15px",
+  fontWeight: "600",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+  boxShadow: "0 4px 10px rgba(37, 99, 235, 0.25)",
+};
 
 export default ReportsAnalysis;
