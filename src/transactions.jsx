@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import SidebarLayout from "./sidebar";
 import { UserContext } from "./app";
 import API_BASE_URL from "./api";
-   // ✅ ADDED
 
 function Transactions({ refreshInvestments, refreshGoals }) {
   const { user } = useContext(UserContext);
@@ -10,6 +9,7 @@ function Transactions({ refreshInvestments, refreshGoals }) {
   const [transactionType, setTransactionType] = useState("Investment");
   const [list, setList] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [goalMap, setGoalMap] = useState({}); // ✅ map goalId -> goalName
 
   // Investment fields
   const [symbol, setSymbol] = useState("");
@@ -32,25 +32,45 @@ function Transactions({ refreshInvestments, refreshGoals }) {
     { symbol: "SBIN", name: "State Bank of India" },
   ];
 
-  /* -------- FETCH TRANSACTIONS -------- */
-  const fetchTransactions = async () => {
-    if (!user) return;
-    const res = await fetch(`${API_BASE_URL}/transactions/${user.id}`); // ✅ CHANGED
-    setList(await res.json());
-  };
-
   /* -------- FETCH GOALS -------- */
   const fetchGoals = async () => {
     if (!user) return;
-    const res = await fetch(`${API_BASE_URL}/goals/${user.id}`); // ✅ CHANGED
+
+    const res = await fetch(`${API_BASE_URL}/goals/${user.id}`);
     const allGoals = await res.json();
+
     const activeGoals = allGoals.filter((g) => g.status === "Active");
     setGoals(activeGoals);
+
+    // ✅ Build goalId -> goalName mapping
+    const map = {};
+    allGoals.forEach((g) => {
+      map[g.id] = g.goal_type;
+    });
+    setGoalMap(map);
+  };
+
+  /* -------- FETCH BOTH TRANSACTION TYPES -------- */
+  const fetchTransactions = async () => {
+    if (!user) return;
+
+    const invRes = await fetch(`${API_BASE_URL}/transactions/${user.id}`);
+    const invData = await invRes.json();
+
+    const goalRes = await fetch(`${API_BASE_URL}/goal-transactions/${user.id}`);
+    const goalData = await goalRes.json();
+
+    const formattedGoals = goalData.map((g) => ({
+      ...g,
+      isGoal: true,
+    }));
+
+    setList([...invData, ...formattedGoals]);
   };
 
   useEffect(() => {
-    fetchTransactions();
     fetchGoals();
+    fetchTransactions();
   }, [user]);
 
   const resetForm = () => {
@@ -62,23 +82,15 @@ function Transactions({ refreshInvestments, refreshGoals }) {
     setContribution("");
   };
 
+  /* -------- SUBMIT -------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
 
     let payload = {};
+    let url = "";
 
     if (transactionType === "Investment") {
-      if (type === "SELL") {
-        const invRes = await fetch(`${API_BASE_URL}/investments/${user.id}`); // ✅ CHANGED
-        const investments = await invRes.json();
-        const inv = investments.find((i) => i.symbol === symbol.toUpperCase());
-        if (!inv || Number(quantity) > inv.units) {
-          alert("Cannot SELL more units than available!");
-          return;
-        }
-      }
-
       payload = {
         symbol,
         type,
@@ -86,18 +98,15 @@ function Transactions({ refreshInvestments, refreshGoals }) {
         fees: Number(fees || 0),
         user_id: user.id,
       };
-    } else if (transactionType === "Goal") {
+      url = `${API_BASE_URL}/transactions`;
+    } else {
       payload = {
         goal_id: Number(selectedGoalId),
         contribution: Number(contribution),
         user_id: user.id,
       };
+      url = `${API_BASE_URL}/goal-transactions`;
     }
-
-    const url =
-      transactionType === "Investment"
-        ? `${API_BASE_URL}/transactions`         // ✅ CHANGED
-        : `${API_BASE_URL}/goal-transactions`;   // ✅ CHANGED
 
     const res = await fetch(url, {
       method: "POST",
@@ -105,106 +114,106 @@ function Transactions({ refreshInvestments, refreshGoals }) {
       body: JSON.stringify(payload),
     });
 
-    const text = await res.text();
-    alert(text);
-
-    if (!res.ok) return;
+    if (!res.ok) {
+      alert("Transaction failed");
+      return;
+    }
 
     resetForm();
     fetchTransactions();
-    if (transactionType === "Investment" && refreshInvestments) refreshInvestments();
-    if (transactionType === "Goal" && refreshGoals) refreshGoals();
-  };
 
-  const deleteTransaction = async (id) => {
-    await fetch(`${API_BASE_URL}/transactions/${id}`, { method: "DELETE" }); // ✅ CHANGED
-    fetchTransactions();
     if (refreshInvestments) refreshInvestments();
     if (refreshGoals) refreshGoals();
   };
 
+  /* -------- DELETE -------- */
+  const deleteTransaction = async (id, isGoal) => {
+    const url = isGoal
+      ? `${API_BASE_URL}/goal-transactions/${id}`
+      : `${API_BASE_URL}/transactions/${id}`;
+
+    await fetch(url, { method: "DELETE" });
+    fetchTransactions();
+  };
+
   return (
     <SidebarLayout>
-      {!user ? (
-        <p>Loading...</p>
-      ) : (
-        <div style={{ padding: "30px" }}>
-          <h2>💳 Transactions</h2>
+      <div style={{ padding: "30px" }}>
+        <h2>💳 Transactions</h2>
 
-          <div style={{ marginBottom: "20px" }}>
-            <label>
-              Transaction Type:{" "}
-              <select
-                value={transactionType}
-                onChange={(e) => setTransactionType(e.target.value)}
-              >
-                <option value="Investment">Investment</option>
-                <option value="Goal">Goal Contribution</option>
+        <div style={{ marginBottom: "20px" }}>
+          <label>
+            Transaction Type:
+            <select
+              value={transactionType}
+              onChange={(e) => setTransactionType(e.target.value)}
+            >
+              <option value="Investment">Investment</option>
+              <option value="Goal">Goal Contribution</option>
+            </select>
+          </label>
+        </div>
+
+        <form onSubmit={handleSubmit} style={card}>
+          {transactionType === "Investment" ? (
+            <>
+              <select style={input} value={symbol} onChange={(e) => setSymbol(e.target.value)} required>
+                <option value="">Select Stock</option>
+                {indianStocks.map((s) => (
+                  <option key={s.symbol} value={s.symbol}>
+                    {s.name} ({s.symbol})
+                  </option>
+                ))}
               </select>
-            </label>
-          </div>
 
-          <form onSubmit={handleSubmit} style={card}>
-            {transactionType === "Investment" ? (
+              <select style={input} value={type} onChange={(e) => setType(e.target.value)}>
+                <option value="BUY">BUY</option>
+                <option value="SELL">SELL</option>
+              </select>
+
+              <input style={input} type="number" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
+
+              <input style={input} type="number" placeholder="Fees" value={fees} onChange={(e) => setFees(e.target.value)} />
+            </>
+          ) : (
+            <>
+              <select style={input} value={selectedGoalId} onChange={(e) => setSelectedGoalId(e.target.value)} required>
+                <option value="">Select Active Goal</option>
+                {goals.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.goal_type} (Target ₹{g.target_amount})
+                  </option>
+                ))}
+              </select>
+
+              <input style={input} type="number" placeholder="Contribution ₹" value={contribution} onChange={(e) => setContribution(e.target.value)} required />
+            </>
+          )}
+
+          <button style={primaryBtn}>Add Transaction</button>
+        </form>
+
+        {list.map((tx) => (
+          <div key={tx.id} style={card}>
+            {tx.isGoal ? (
               <>
-                <select style={input} value={symbol} onChange={(e) => setSymbol(e.target.value)} required>
-                  <option value="">Select Stock</option>
-                  {indianStocks.map((s) => (
-                    <option key={s.symbol} value={s.symbol}>
-                      {s.name} ({s.symbol})
-                    </option>
-                  ))}
-                </select>
-
-                <select style={input} value={type} onChange={(e) => setType(e.target.value)}>
-                  <option value="BUY">BUY</option>
-                  <option value="SELL">SELL</option>
-                </select>
-
-                <input style={input} type="number" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
-
-                <input style={input} type="number" placeholder="Fees" value={fees} onChange={(e) => setFees(e.target.value)} />
+                <strong>🎯 {goalMap[tx.goal_id] || "Goal"}</strong>
+                <p>Contribution: ₹{tx.contribution}</p>
               </>
             ) : (
               <>
-                <select style={input} value={selectedGoalId} onChange={(e) => setSelectedGoalId(e.target.value)} required>
-                  <option value="">Select Active Goal</option>
-                  {goals.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.goal_type} (Target: ₹{g.target_amount})
-                    </option>
-                  ))}
-                </select>
-
-                <input style={input} type="number" placeholder="Contribution Amount (₹)" value={contribution} onChange={(e) => setContribution(e.target.value)} required />
+                <strong>{tx.symbol}</strong>
+                <p>{tx.type} | Qty: {tx.quantity}</p>
+                <p>Fees: ₹{tx.fees}</p>
               </>
             )}
 
-            <button style={primaryBtn}>Add Transaction</button>
-          </form>
-
-          {list.map((tx) => (
-            <div key={tx.id} style={card}>
-              {tx.goal_id ? (
-                <>
-                  <strong>Goal Contribution</strong>
-                  <p>₹{tx.contribution}</p>
-                </>
-              ) : (
-                <>
-                  <strong>{tx.symbol}</strong>
-                  <p>{tx.type} | Qty: {tx.quantity} @ ₹{tx.price}</p>
-                  <p>Fees: ₹{tx.fees}</p>
-                </>
-              )}
-
-              <button style={deleteBtn} onClick={() => deleteTransaction(tx.id)}>
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+            <button style={deleteBtn} onClick={() => deleteTransaction(tx.id, tx.isGoal)}>
+              Delete
+            </button>
+          </div>
+        ))}
+      </div>
     </SidebarLayout>
   );
 }
@@ -215,4 +224,3 @@ const deleteBtn = { background: "#EF4444", color: "#fff", padding: "8px", border
 const card = { background: "#fff", padding: "16px", marginBottom: "12px", borderRadius: "10px" };
 
 export default Transactions;
-
