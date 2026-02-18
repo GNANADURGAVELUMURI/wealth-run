@@ -194,7 +194,8 @@ function Transactions({ refreshInvestments, refreshGoals }) {
         </form>
 
         {list.map((tx) => (
-          <div key={tx.id} style={card}>
+          <div key={`${tx.isGoal ? "goal" : "inv"}-${tx.id}`} style={card}>
+
             {tx.isGoal ? (
               <>
                 <strong>🎯 {goalMap[tx.goal_id] || "Goal"}</strong>
